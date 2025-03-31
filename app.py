@@ -1,5 +1,5 @@
 from flask import Flask
-from middleware.routes import configure_routes
+from src.middleware.routes import configure_routes
 
 app = Flask(__name__)
 
