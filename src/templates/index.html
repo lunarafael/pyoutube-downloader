@@ -62,7 +62,7 @@
                         $("#downloadOptions").empty();
                         response.options.forEach(function (option) {
                             let details = option.type === "video"
-                                ? `${option.resolution} - Áudio: ${option.audio}`
+                                ? `${option.resolution}`
                                 : `${option.resolution} - Codec: ${option.codec}`;
                             
                             $("#downloadOptions").append(
