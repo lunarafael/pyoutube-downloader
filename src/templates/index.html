@@ -3,21 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Download de Vídeo do YouTube</title>
+    <title>YouTube Downloader</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+            padding: 15px;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 80%;
+            margin: 0 auto;
+        }
+        .form-control {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            border-color: #444;
+        }
+        .list-group-item {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            border-color: #444;
+        }
+        .alert {
+            background-color: #333;
+            color: #fff;
+            border-color: #444;
+        }
+        #toggleDarkMode {
+            background-color: #444;
+            color: #fff;
+            border: none;
+        }
+        .btn-roxo {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+        }
+        .btn-roxo:hover {
+            background-color: #5a32a3;
+            border-color: #5a32a3;
+        }
+        body.light-mode {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .light-mode .container {
+            background-color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        .light-mode .form-control {
+            background-color: #fff;
+            color: #212529;
+            border-color: #ced4da;
+        }
+        .light-mode .list-group-item {
+            background-color: #fff;
+            color: #212529;
+            border-color: #ced4da;
+        }
+        .light-mode .alert {
+            background-color: #f8f9fa;
+            color: #212529;
+            border-color: #ced4da;
+        }
+        .light-mode #toggleDarkMode {
+            background-color: #e9ecef;
+            color: #212529;
+        }
+        #videoInfo {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        #videoInfo::-webkit-scrollbar,
+        #downloadOptions::-webkit-scrollbar {
+            width: 6px;
+        }
+        #videoInfo::-webkit-scrollbar-thumb,
+        #downloadOptions::-webkit-scrollbar-thumb {
+            background-color: #6f42c1;
+            border-radius: 4px;
+        }
+        #videoInfo::-webkit-scrollbar-track,
+        #downloadOptions::-webkit-scrollbar-track {
+            background-color: #2d2d2d;
+        }
+        .light-mode #videoInfo::-webkit-scrollbar-thumb,
+        .light-mode #downloadOptions::-webkit-scrollbar-thumb {
+            background-color: #5a32a3;
+        }
+        .light-mode #videoInfo::-webkit-scrollbar-track,
+        .light-mode #downloadOptions::-webkit-scrollbar-track {
+            background-color: #f1f1f1;
+        }
+        @media (max-width: 576px) {
+            body {
+                padding: 10px;
+                display: block !important;
+                height: auto !important;
+            }
+            .container {
+                padding: 15px;
+            }
+            #videoInfo {
+                max-height: 65vh;
+            }
+            #downloadOptions {
+                max-height: 50vh;
+            }
+        }
+    </style>
 </head>
 <body class="d-flex justify-content-center align-items-center vh-100">
     <div class="container text-center">
-        <h1 class="mb-4">Baixar Vídeo do YouTube</h1>
-        <form method="POST">
+        <button id="toggleDarkMode" class="btn btn-sm position-absolute top-0 end-0 m-3">☀️</button>
+
+        <h1 class="mb-4">YouTube Downloader</h1>
+
+        <form id="videoForm">
             <div class="mb-3">
-                <input type="text" class="form-control" name="url" placeholder="Cole o link do YouTube aqui" required>
+                <input type="text" class="form-control" id="url" name="url" placeholder="YouTube Link" required>
             </div>
-            <button type="submit" class="btn btn-primary">Baixar</button>
+            <button type="submit" class="btn btn-roxo">Go</button>
         </form>
-        {% if error %}
-        <div class="alert alert-danger mt-3">{{ error }}</div>
-        {% endif %}
+
+        <div id="errorMessage" class="alert alert-danger mt-3 d-none"></div>
+
+        <div id="videoInfo" class="mt-4 d-none">
+            <h3 id="videoTitle" class="text-truncate"></h3>
+            <img id="thumbnail" src="" alt="Thumbnail" class="img-fluid rounded shadow mt-2 mb-3" style="max-width: 40%;">
+            
+            <h4 class="mt-3">Download options:</h4>
+            <div class="download-options-container">
+                <ul id="downloadOptions" class="list-group mt-2"></ul>
+            </div>
+        </div>
     </div>
+
+    <script>
+        $(document).ready(function () {
+            if (localStorage.getItem('darkMode') === 'false') {
+                $('body').addClass('light-mode');
+                $('#toggleDarkMode').html('🌙');
+            } else {
+                $('body').removeClass('light-mode');
+                $('#toggleDarkMode').html('☀️');
+            }
+
+            $('#toggleDarkMode').click(function() {
+                $('body').toggleClass('light-mode');
+                if ($('body').hasClass('light-mode')) {
+                    $(this).html('🌙');
+                    localStorage.setItem('darkMode', 'false');
+                } else {
+                    $(this).html('☀️');
+                    localStorage.setItem('darkMode', 'true');
+                }
+            });
+
+            $("#videoForm").submit(function (event) {
+                event.preventDefault();
+                var url = $("#url").val().trim();
+                
+                if (!url) {
+                    $("#errorMessage").text("Por favor, insira uma URL válida.").removeClass("d-none");
+                    return;
+                }
+    
+                $("#errorMessage").addClass("d-none");
+    
+                $.ajax({
+                    url: "/get_video_info",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ url: url }),
+                    success: function (response) {
+                        if (response.error) {
+                            $("#errorMessage").text(response.error).removeClass("d-none");
+                            return;
+                        }
+    
+                        $("#videoTitle").text(response.title);
+                        $("#thumbnail").attr("src", response.thumbnail);
+    
+                        $("#downloadOptions").empty();
+                        response.options.forEach(function (option) {
+                            let details = option.type === "video"
+                                ? `${option.resolution}`
+                                : `${option.resolution} - Codec: ${option.codec}`;
+                            
+                            $("#downloadOptions").append(
+                                `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>${details}</span>
+                                    <a class="btn btn-success btn-sm" href="/download/${option.itag}?url=${encodeURIComponent(url)}">
+                                        Download
+                                    </a>
+                                </li>`
+                            );
+                        });
+    
+                        $("#videoInfo").removeClass("d-none");  
+                    },
+                    error: function () {
+                        $("#errorMessage").text("Erro ao buscar informações do vídeo.").removeClass("d-none");
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
