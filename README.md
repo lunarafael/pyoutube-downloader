@@ -28,3 +28,13 @@ A simple and elegant YouTube video downloader built with **Flask**, **jQuery**, 
 
 ## Installation
 You can run this application locally by following these steps:
+
+1. Install the required packages:
+   ```bash
+   pip install -r requirements.txt # It is advised to use a virtual environment
+   ```
+
+2. Run the Flask application:
+   ```bash
+    python app.py
+```
