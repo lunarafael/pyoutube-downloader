@@ -1,5 +1,5 @@
 from flask import render_template, request, send_file, jsonify
-from libs.downloader import VideoDownloader
+from src.libs.downloader import VideoDownloader
 
 def configure_routes(app):
     @app.route('/', methods=['GET', 'POST'])
