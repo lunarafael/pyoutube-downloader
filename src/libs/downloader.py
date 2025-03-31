@@ -1,4 +1,7 @@
 from pytubefix import YouTube
+from io import BytesIO
+import os
+from moviepy.editor import VideoFileClip, AudioFileClip
 
 class VideoDownloader:
     def __init__(self, url):
@@ -18,9 +21,8 @@ class VideoDownloader:
 
             if res in resolutions:
                 current = resolutions[res]
-                if stream.is_progressive and not current.is_progressive:
-                    resolutions[res] = stream
-                elif (stream.is_progressive == current.is_progressive) and (stream.fps > current.fps):
+                if (stream.is_progressive and not current.is_progressive) or \
+                   (stream.is_progressive == current.is_progressive and stream.fps > current.fps):
                     resolutions[res] = stream
             else:
                 resolutions[res] = stream
@@ -31,7 +33,8 @@ class VideoDownloader:
                 "itag": stream.itag,
                 "resolution": f"{res} ({stream.fps} FPS)",
                 "type": "video",
-                "audio": "Sim" if stream.is_progressive else "Não"
+                "audio": "Sim" if stream.is_progressive else "Não",
+                "progressive": stream.is_progressive
             })
 
         video_options.sort(key=lambda x: int(x["resolution"].split("p")[0]), reverse=True)
@@ -59,9 +62,56 @@ class VideoDownloader:
         if not stream:
             return None, None
 
-        from io import BytesIO
-        buffer = BytesIO()
-        stream.stream_to_buffer(buffer)
-        buffer.seek(0)
+        if stream.is_progressive:
+            buffer = BytesIO()
+            stream.stream_to_buffer(buffer)
+            buffer.seek(0)
+            return buffer, f"{self.yt.title}.mp4"
+        
+        else:
+            video_buffer = BytesIO()
+            stream.stream_to_buffer(video_buffer)
+            video_buffer.seek(0)
 
-        return buffer, f"{self.yt.title}.mp4"
+            audio_stream = self.yt.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first()
+            audio_buffer = BytesIO()
+            audio_stream.stream_to_buffer(audio_buffer)
+            audio_buffer.seek(0)
+
+            temp_video = "temp_video.mp4"
+            temp_audio = "temp_audio.mp4"
+            temp_output = "output_final.mp4"
+
+            with open(temp_video, "wb") as f:
+                f.write(video_buffer.getbuffer())
+            
+            with open(temp_audio, "wb") as f:
+                f.write(audio_buffer.getbuffer())
+
+            video_clip = VideoFileClip(temp_video)
+            audio_clip = AudioFileClip(temp_audio)
+            
+            final_clip = video_clip.set_audio(audio_clip)
+            final_clip.write_videofile(
+                temp_output,
+                codec="libx264",
+                audio_codec="aac",
+                threads=4,
+                preset="ultrafast"
+            )
+
+            with open(temp_output, "rb") as f:
+                final_buffer = BytesIO(f.read())
+            
+            final_buffer.seek(0)
+
+            video_clip.close()
+            audio_clip.close()
+            if os.path.exists(temp_video):
+                os.remove(temp_video)
+            if os.path.exists(temp_audio):
+                os.remove(temp_audio)
+            if os.path.exists(temp_output):
+                os.remove(temp_output)
+
+            return final_buffer, f"{self.yt.title}.mp4"
