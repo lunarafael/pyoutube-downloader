@@ -42,13 +42,8 @@ class VideoDownloader:
         try:
             self.url = url.split("&")[0] if "youtube.com" in url and "&" in url else url
             self.yt = YouTube(
-                self.url,
-                use_oauth=False,
-                allow_oauth_cache=True,
-                defer_prefetch_init=True
+                self.url
             )
-            self.yt.bypass_age_gate()
-            self.yt.prefetch()
             self.yt._vid_info
         except Exception as e:
             logging.error(f"Error initializing YouTube object: {str(e)}")
