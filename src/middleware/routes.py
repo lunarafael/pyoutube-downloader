@@ -17,7 +17,7 @@ def configure_routes(app):
             video_info = downloader.get_video_info()
             return jsonify(video_info)
         except Exception as e:
-            return jsonify({"error": f"Erro ao processar o vídeo: {str(e)}"})
+            return jsonify({"error": f"Error processing video: {str(e)}"})
 
     @app.route('/download/<itag>', methods=['GET'])
     def download(itag):
