@@ -3,12 +3,22 @@ from pytubefix.request import _execute_request
 from io import BytesIO
 import os
 from moviepy.editor import VideoFileClip, AudioFileClip
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 default_headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'accept-language': 'en-US,en;q=0.9',
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'accept-encoding': 'gzip, deflate, br',
+    'referer': 'https://www.youtube.com/',
+    'origin': 'https://www.youtube.com',
+    'sec-fetch-site': 'same-origin',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-user': '?1',
+    'sec-fetch-dest': 'document',
+    'dnt': '1',
 }
 
 original_execute_request = _execute_request
@@ -29,8 +39,20 @@ _execute_request = custom_execute_request
 
 class VideoDownloader:
     def __init__(self, url):
-        self.url = url.split("&")[0] if "youtube.com" in url and "&" in url else url
-        self.yt = YouTube(self.url)
+        try:
+            self.url = url.split("&")[0] if "youtube.com" in url and "&" in url else url
+            self.yt = YouTube(
+                self.url,
+                use_oauth=False,
+                allow_oauth_cache=True,
+                defer_prefetch_init=True
+            )
+            self.yt.bypass_age_gate()
+            self.yt.prefetch()
+            self.yt._vid_info
+        except Exception as e:
+            logging.error(f"Error initializing YouTube object: {str(e)}")
+            raise
 
     def get_video_info(self):
         streams = self.yt.streams

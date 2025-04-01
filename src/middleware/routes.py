@@ -1,5 +1,8 @@
 from flask import render_template, request, send_file, jsonify
 from src.libs.downloader import VideoDownloader
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def configure_routes(app):
     @app.route('/', methods=['GET', 'POST'])
@@ -10,14 +13,18 @@ def configure_routes(app):
     def get_video_info():
         url = request.json.get("url", "").strip()
         if not url:
-            return jsonify({"error": "Por favor, insira uma URL válida do YouTube."})
+            return jsonify({"error": "Please, insert a valid URL."})
 
         try:
             downloader = VideoDownloader(url)
             video_info = downloader.get_video_info()
             return jsonify(video_info)
         except Exception as e:
-            return jsonify({"error": f"Error processing video: {str(e)}"})
+            logging.error(f"Error processing video {url}: {str(e)}", exc_info=True)
+            return jsonify({
+                "error": "Not possible to get video info.",
+            "details": str(e)
+        })
 
     @app.route('/download/<itag>', methods=['GET'])
     def download(itag):
