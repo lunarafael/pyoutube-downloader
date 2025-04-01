@@ -43,9 +43,7 @@ class VideoDownloader:
             self.url = url.split("&")[0] if "youtube.com" in url and "&" in url else url
             self.yt = YouTube(
                 self.url,
-                'WEB_EMBED',
-                use_oauth=True,
-                allow_oauth_cache=True
+                'WEB_EMBED'
             )
             self.yt._vid_info
         except Exception as e:
