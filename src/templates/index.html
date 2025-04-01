@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,6 +14,7 @@
             transition: all 0.3s ease;
             padding: 15px;
         }
+
         .container {
             background-color: #1e1e1e;
             padding: 20px;
@@ -22,107 +24,188 @@
             max-width: 80%;
             margin: 0 auto;
         }
+
         .form-control {
             background-color: #2d2d2d;
             color: #ffffff;
             border-color: #444;
         }
+
         .list-group-item {
             background-color: #2d2d2d;
             color: #ffffff;
             border-color: #444;
         }
+
         .alert {
             background-color: #333;
             color: #fff;
             border-color: #444;
         }
+
         #toggleDarkMode {
             background-color: #444;
             color: #fff;
             border: none;
         }
+
         .btn-roxo {
             background-color: #6f42c1;
             border-color: #6f42c1;
             color: white;
         }
+
         .btn-roxo:hover {
             background-color: #5a32a3;
             border-color: #5a32a3;
         }
+
         body.light-mode {
             background-color: #f8f9fa;
             color: #212529;
         }
+
         .light-mode .container {
             background-color: #ffffff;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
+
         .light-mode .form-control {
             background-color: #fff;
             color: #212529;
             border-color: #ced4da;
         }
+
         .light-mode .list-group-item {
             background-color: #fff;
             color: #212529;
             border-color: #ced4da;
         }
+
         .light-mode .alert {
             background-color: #f8f9fa;
             color: #212529;
             border-color: #ced4da;
         }
+
         .light-mode #toggleDarkMode {
             background-color: #e9ecef;
             color: #212529;
         }
+
         #videoInfo {
             max-height: 60vh;
             overflow-y: auto;
             padding-right: 10px;
         }
-        
+
         #videoInfo::-webkit-scrollbar,
         #downloadOptions::-webkit-scrollbar {
             width: 6px;
         }
+
         #videoInfo::-webkit-scrollbar-thumb,
         #downloadOptions::-webkit-scrollbar-thumb {
             background-color: #6f42c1;
             border-radius: 4px;
         }
+
         #videoInfo::-webkit-scrollbar-track,
         #downloadOptions::-webkit-scrollbar-track {
             background-color: #2d2d2d;
         }
+
         .light-mode #videoInfo::-webkit-scrollbar-thumb,
         .light-mode #downloadOptions::-webkit-scrollbar-thumb {
             background-color: #5a32a3;
         }
+
         .light-mode #videoInfo::-webkit-scrollbar-track,
         .light-mode #downloadOptions::-webkit-scrollbar-track {
             background-color: #f1f1f1;
         }
+
         @media (max-width: 576px) {
             body {
                 padding: 10px;
                 display: block !important;
                 height: auto !important;
             }
+
             .container {
                 padding: 15px;
             }
+
             #videoInfo {
                 max-height: 65vh;
             }
+
             #downloadOptions {
                 max-height: 50vh;
             }
         }
+
+        .spinner-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(243, 243, 243, 0.3);
+            border-top: 5px solid #6f42c1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        .processing-message {
+            color: white;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .light-mode .spinner-container {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .light-mode .spinner {
+            border-top: 5px solid #5a32a3;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .processing-message {
+            color: white;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .light-mode .processing-message {
+            color: black;
+        }
     </style>
 </head>
+
 <body class="d-flex justify-content-center align-items-center vh-100">
     <div class="container text-center">
         <button id="toggleDarkMode" class="btn btn-sm position-absolute top-0 end-0 m-3">☀️</button>
@@ -131,6 +214,10 @@
 
         <form id="videoForm">
             <div class="mb-3">
+                <div id="loadingSpinner" class="spinner-container d-none">
+                    <div class="spinner"></div>
+                    <div class="processing-message">Processando vídeo...<br>Isso pode levar alguns minutos</div>
+                </div>
                 <input type="text" class="form-control" id="url" name="url" placeholder="YouTube Link" required>
             </div>
             <button type="submit" class="btn btn-roxo">Go</button>
@@ -140,8 +227,9 @@
 
         <div id="videoInfo" class="mt-4 d-none">
             <h3 id="videoTitle" class="text-truncate"></h3>
-            <img id="thumbnail" src="" alt="Thumbnail" class="img-fluid rounded shadow mt-2 mb-3" style="max-width: 40%;">
-            
+            <img id="thumbnail" src="" alt="Thumbnail" class="img-fluid rounded shadow mt-2 mb-3"
+                style="max-width: 40%;">
+
             <h4 class="mt-3">Download options:</h4>
             <div class="download-options-container">
                 <ul id="downloadOptions" class="list-group mt-2"></ul>
@@ -159,7 +247,7 @@
                 $('#toggleDarkMode').html('☀️');
             }
 
-            $('#toggleDarkMode').click(function() {
+            $('#toggleDarkMode').click(function () {
                 $('body').toggleClass('light-mode');
                 if ($('body').hasClass('light-mode')) {
                     $(this).html('🌙');
@@ -173,14 +261,14 @@
             $("#videoForm").submit(function (event) {
                 event.preventDefault();
                 var url = $("#url").val().trim();
-                
+
                 if (!url) {
                     $("#errorMessage").text("Insert a valid URL.").removeClass("d-none");
                     return;
                 }
-    
+
                 $("#errorMessage").addClass("d-none");
-    
+
                 $.ajax({
                     url: "/get_video_info",
                     method: "POST",
@@ -191,34 +279,75 @@
                             $("#errorMessage").text(response.error).removeClass("d-none");
                             return;
                         }
-    
+
                         $("#videoTitle").text(response.title);
                         $("#thumbnail").attr("src", response.thumbnail);
-    
+
                         $("#downloadOptions").empty();
                         response.options.forEach(function (option) {
                             let details = option.type === "video"
                                 ? `${option.resolution}`
                                 : `${option.resolution} - Codec: ${option.codec}`;
-                            
+
                             $("#downloadOptions").append(
                                 `<li class="list-group-item d-flex justify-content-between align-items-center">
                                     <span>${details}</span>
-                                    <a class="btn btn-success btn-sm" href="/download/${option.itag}?url=${encodeURIComponent(url)}">
+                                    <a class="btn btn-success btn-sm" href="/download/${option.itag}?url=${encodeURIComponent(url)}" download="${response.title}.mp4">
                                         Download
                                     </a>
                                 </li>`
                             );
                         });
-    
-                        $("#videoInfo").removeClass("d-none");  
+
+                        $("#videoInfo").removeClass("d-none");
                     },
                     error: function () {
                         $("#errorMessage").text("Error retrieving video info.").removeClass("d-none");
                     }
                 });
             });
+            $(document).on('click', 'a.btn-success', function (e) {
+                e.preventDefault();
+                const downloadUrl = $(this).attr('href');
+
+                // Mostrar spinner
+                $('#loadingSpinner').removeClass('d-none');
+
+                // Fazer a requisição do arquivo
+                fetch(downloadUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erro no download');
+                        }
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        // Criar link para download
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = $(this).attr('download') || 'video.mp4';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    })
+                    .catch(error => {
+                        $("#errorMessage").text("Erro durante o download: " + error.message).removeClass("d-none");
+                    })
+                    .finally(() => {
+                        // Esconder spinner
+                        $('#loadingSpinner').addClass('d-none');
+                    });
+            });
         });
     </script>
+    <div id="loadingSpinner" class="spinner-container d-none">
+        <div>
+            <div class="spinner"></div>
+            <div class="processing-message">Processando vídeo... Isso pode levar alguns minutos</div>
+        </div>
+    </div>
 </body>
+
 </html>
