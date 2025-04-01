@@ -1,14 +1,29 @@
 from pytubefix import YouTube
-from pytubefix.request import HTTPRequest
+from pytubefix.request import _execute_request
 from io import BytesIO
 import os
 from moviepy.editor import VideoFileClip, AudioFileClip
-import requests
 
-HTTPRequest._headers = {
+default_headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    'Accept-Language': 'en-US,en;q=0.9',
+    'accept-language': 'en-US,en;q=0.9',
 }
+
+original_execute_request = _execute_request
+
+def custom_execute_request(
+    url,
+    method=None,
+    headers=None,
+    data=None,
+    timeout=None
+):
+    if headers is None:
+        headers = {}
+    headers.update(default_headers)
+    return original_execute_request(url, method, headers, data, timeout)
+
+_execute_request = custom_execute_request
 
 class VideoDownloader:
     def __init__(self, url):
