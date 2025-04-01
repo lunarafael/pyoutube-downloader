@@ -23,16 +23,16 @@ def configure_routes(app):
     def download(itag):
         url = request.args.get("url", "").strip()
         if not url:
-            return "Erro: URL inválida"
+            return "Error: Invaldi URL."
 
         try:
             downloader = VideoDownloader(url)
             video_buffer, filename = downloader.download_by_itag(itag)
 
             if not video_buffer:
-                return "Erro: Nenhum stream disponível."
+                return "Error: No stream available."
 
             return send_file(video_buffer, as_attachment=True, download_name=filename, mimetype="video/mp4")
 
         except Exception as e:
-            return f"Erro ao processar o vídeo: {str(e)}"
+            return f"Error processing video: {str(e)}"

@@ -175,7 +175,7 @@
                 var url = $("#url").val().trim();
                 
                 if (!url) {
-                    $("#errorMessage").text("Por favor, insira uma URL válida.").removeClass("d-none");
+                    $("#errorMessage").text("Insert a valid URL.").removeClass("d-none");
                     return;
                 }
     
@@ -214,7 +214,7 @@
                         $("#videoInfo").removeClass("d-none");  
                     },
                     error: function () {
-                        $("#errorMessage").text("Erro ao buscar informações do vídeo.").removeClass("d-none");
+                        $("#errorMessage").text("Error retrieving video info.").removeClass("d-none");
                     }
                 });
             });
