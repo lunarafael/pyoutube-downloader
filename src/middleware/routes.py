@@ -1,6 +1,7 @@
 from flask import render_template, request, send_file, jsonify
 from src.libs.downloader import VideoDownloader
 import logging
+import requests
 
 logging.basicConfig(level=logging.INFO)
 
@@ -43,3 +44,18 @@ def configure_routes(app):
 
         except Exception as e:
             return f"Error processing video: {str(e)}"
+        
+    @app.route('/test_internet')
+    def test_internet():
+        try:
+            response = requests.get("https://8.8.8.8", timeout=5)
+            return jsonify({
+                "status": "success",
+                "message": "Internet access OK",
+                "response_code": response.status_code
+            })
+        except requests.ConnectionError:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to connect to internet"
+            }), 500
