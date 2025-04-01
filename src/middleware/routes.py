@@ -44,18 +44,3 @@ def configure_routes(app):
 
         except Exception as e:
             return f"Error processing video: {str(e)}"
-        
-    @app.route('/test_internet')
-    def test_internet():
-        try:
-            response = requests.get("https://www.youtube.com", timeout=5)
-            return jsonify({
-                "status": "success",
-                "message": "Internet access OK",
-                "response_code": response.status_code
-            })
-        except requests.ConnectionError:
-            return jsonify({
-                "status": "error",
-                "message": "Failed to connect to internet"
-            }), 500

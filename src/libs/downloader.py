@@ -25,6 +25,7 @@ class VideoDownloader:
             self.url = url.split("&")[0] if "youtube.com" in url and "&" in url else url
             self.yt = YouTube(
                 self.url,
+                'ANDROID',
                 use_oauth=False, 
                 allow_oauth_cache=False
             )
