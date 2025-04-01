@@ -48,7 +48,7 @@ def configure_routes(app):
     @app.route('/test_internet')
     def test_internet():
         try:
-            response = requests.get("https://8.8.8.8", timeout=5)
+            response = requests.get("https://www.youtube.com", timeout=5)
             return jsonify({
                 "status": "success",
                 "message": "Internet access OK",
