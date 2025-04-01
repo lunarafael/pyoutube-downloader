@@ -8,43 +8,6 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-_default_clients[ "ANDROID"][ "context"]["client"]["clientVersion"] = "19.08.35"
-_default_clients["IOS"]["context"]["client"]["clientVersion"] = "19.08.35"
-_default_clients[ "ANDROID_EMBED"][ "context"][ "client"]["clientVersion"] = "19.08.35"
-_default_clients[ "IOS_EMBED"][ "context"]["client"]["clientVersion"] = "19.08.35"
-_default_clients["IOS_MUSIC"][ "context"]["client"]["clientVersion"] = "6.41"
-_default_clients[ "ANDROID_MUSIC"] = _default_clients[ "ANDROID_CREATOR" ]
-
-default_headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'accept-language': 'en-US,en;q=0.9',
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-    'accept-encoding': 'gzip, deflate, br',
-    'referer': 'https://www.youtube.com/',
-    'origin': 'https://www.youtube.com',
-    'sec-fetch-site': 'same-origin',
-    'sec-fetch-mode': 'navigate',
-    'sec-fetch-user': '?1',
-    'sec-fetch-dest': 'document',
-    'dnt': '1',
-}
-
-# original_execute_request = _execute_request
-
-# def custom_execute_request(
-#     url,
-#     method=None,
-#     headers=None,
-#     data=None,
-#     timeout=None
-# ):
-#     if headers is None:
-#         headers = {}
-#     headers.update(default_headers)
-#     return original_execute_request(url, method, headers, data, timeout)
-
-# _execute_request = custom_execute_request
-
 class VideoDownloader:
     def __init__(self, url):
         try:
