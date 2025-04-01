@@ -30,7 +30,9 @@ A simple and elegant YouTube video downloader built with **Flask**, **jQuery**, 
 ### Prerequisites
 - Python 3.x
 - Internet connection (for downloading videos)
+- Docker (optional, for running the app in a container)
 
+#### Installing with pip
 You can run this application locally by following these steps:
 
 1. Install the required packages:
@@ -42,3 +44,13 @@ You can run this application locally by following these steps:
    ```bash
     python app.py
     ```
+
+2. Access the application in your web browser at `http://localhost:5000`.
+
+#### Running with Docker
+You can also run this application using Docker. Make sure you have Docker installed on your machine.  
+1. Run the docker-compose command to build and start the application:
+   ```bash
+   docker-compose up --build -d
+   ```
+2. Access the application in your web browser at `http://localhost:5000`.
