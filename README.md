@@ -37,4 +37,4 @@ You can run this application locally by following these steps:
 2. Run the Flask application:
    ```bash
     python app.py
-```
+    ```
