@@ -1,41 +1,23 @@
 from pytubefix import YouTube
-from pytubefix.request import _execute_request
-from io import BytesIO
+import urllib.request
 import os
-from moviepy.editor import VideoFileClip, AudioFileClip
 import logging
+from io import BytesIO
+from moviepy.editor import VideoFileClip, AudioFileClip
 
 logging.basicConfig(level=logging.INFO)
 
-default_headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'accept-language': 'en-US,en;q=0.9',
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-    'accept-encoding': 'gzip, deflate, br',
-    'referer': 'https://www.youtube.com/',
-    'origin': 'https://www.youtube.com',
-    'sec-fetch-site': 'same-origin',
-    'sec-fetch-mode': 'navigate',
-    'sec-fetch-user': '?1',
-    'sec-fetch-dest': 'document',
-    'dnt': '1',
-}
+PROXY = os.environ.get("PROXY", None)
+if PROXY:
+    logging.info(f"Using proxy: {PROXY}")
 
-original_execute_request = _execute_request
+    proxy_handler = urllib.request.ProxyHandler({
+        "http": PROXY,
+        "https": PROXY
+    })
 
-def custom_execute_request(
-    url,
-    method=None,
-    headers=None,
-    data=None,
-    timeout=None
-):
-    if headers is None:
-        headers = {}
-    headers.update(default_headers)
-    return original_execute_request(url, method, headers, data, timeout)
-
-_execute_request = custom_execute_request
+    opener = urllib.request.build_opener(proxy_handler)
+    urllib.request.install_opener(opener)
 
 class VideoDownloader:
     def __init__(self, url):
@@ -43,9 +25,8 @@ class VideoDownloader:
             self.url = url.split("&")[0] if "youtube.com" in url and "&" in url else url
             self.yt = YouTube(
                 self.url,
-                'WEB_EMBED',
-                use_oauth=True,
-                allow_oauth_cache=True
+                use_oauth=False, 
+                allow_oauth_cache=False
             )
             self.yt._vid_info
         except Exception as e:
@@ -55,9 +36,8 @@ class VideoDownloader:
     def get_video_info(self):
         try:
             streams = self.yt.streams
-            
             video_streams = streams.filter(file_extension="mp4", type="video")
-            
+
             resolutions = {}
             for stream in video_streams:
                 res = stream.resolution
@@ -67,7 +47,7 @@ class VideoDownloader:
                 if res in resolutions:
                     current = resolutions[res]
                     if (stream.is_progressive and not current.is_progressive) or \
-                    (stream.is_progressive == current.is_progressive and stream.fps > current.fps):
+                       (stream.is_progressive == current.is_progressive and stream.fps > current.fps):
                         resolutions[res] = stream
                 else:
                     resolutions[res] = stream
@@ -105,61 +85,64 @@ class VideoDownloader:
             raise
 
     def download_by_itag(self, itag):
-        stream = self.yt.streams.get_by_itag(itag)
+        try:
+            stream = self.yt.streams.get_by_itag(itag)
+            if not stream:
+                return None, None
 
-        if not stream:
-            return None, None
+            if stream.is_progressive:
+                buffer = BytesIO()
+                stream.stream_to_buffer(buffer)
+                buffer.seek(0)
+                return buffer, f"{self.yt.title}.mp4"
+            else:
+                video_buffer = BytesIO()
+                stream.stream_to_buffer(video_buffer)
+                video_buffer.seek(0)
 
-        if stream.is_progressive:
-            buffer = BytesIO()
-            stream.stream_to_buffer(buffer)
-            buffer.seek(0)
-            return buffer, f"{self.yt.title}.mp4"
-        
-        else:
-            video_buffer = BytesIO()
-            stream.stream_to_buffer(video_buffer)
-            video_buffer.seek(0)
+                audio_stream = self.yt.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first()
+                audio_buffer = BytesIO()
+                audio_stream.stream_to_buffer(audio_buffer)
+                audio_buffer.seek(0)
 
-            audio_stream = self.yt.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first()
-            audio_buffer = BytesIO()
-            audio_stream.stream_to_buffer(audio_buffer)
-            audio_buffer.seek(0)
+                temp_video = "temp_video.mp4"
+                temp_audio = "temp_audio.mp4"
+                temp_output = "output_final.mp4"
 
-            temp_video = "temp_video.mp4"
-            temp_audio = "temp_audio.mp4"
-            temp_output = "output_final.mp4"
+                with open(temp_video, "wb") as f:
+                    f.write(video_buffer.getbuffer())
+                
+                with open(temp_audio, "wb") as f:
+                    f.write(audio_buffer.getbuffer())
 
-            with open(temp_video, "wb") as f:
-                f.write(video_buffer.getbuffer())
-            
-            with open(temp_audio, "wb") as f:
-                f.write(audio_buffer.getbuffer())
+                video_clip = VideoFileClip(temp_video)
+                audio_clip = AudioFileClip(temp_audio)
+                
+                final_clip = video_clip.set_audio(audio_clip)
+                final_clip.write_videofile(
+                    temp_output,
+                    codec="libx264",
+                    audio_codec="aac",
+                    threads=4,
+                    preset="ultrafast"
+                )
 
-            video_clip = VideoFileClip(temp_video)
-            audio_clip = AudioFileClip(temp_audio)
-            
-            final_clip = video_clip.set_audio(audio_clip)
-            final_clip.write_videofile(
-                temp_output,
-                codec="libx264",
-                audio_codec="aac",
-                threads=4,
-                preset="ultrafast"
-            )
+                with open(temp_output, "rb") as f:
+                    final_buffer = BytesIO(f.read())
+                
+                final_buffer.seek(0)
 
-            with open(temp_output, "rb") as f:
-                final_buffer = BytesIO(f.read())
-            
-            final_buffer.seek(0)
+                video_clip.close()
+                audio_clip.close()
+                if os.path.exists(temp_video):
+                    os.remove(temp_video)
+                if os.path.exists(temp_audio):
+                    os.remove(temp_audio)
+                if os.path.exists(temp_output):
+                    os.remove(temp_output)
 
-            video_clip.close()
-            audio_clip.close()
-            if os.path.exists(temp_video):
-                os.remove(temp_video)
-            if os.path.exists(temp_audio):
-                os.remove(temp_audio)
-            if os.path.exists(temp_output):
-                os.remove(temp_output)
+                return final_buffer, f"{self.yt.title}.mp4"
 
-            return final_buffer, f"{self.yt.title}.mp4"
+        except Exception as e:
+            logging.error(f"Error during download: {str(e)}")
+            raise
