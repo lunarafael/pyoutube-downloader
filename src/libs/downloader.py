@@ -1,11 +1,19 @@
 from pytubefix import YouTube
 from pytubefix.request import _execute_request
+from pytubefix.innertube import _default_clients
 from io import BytesIO
 import os
 from moviepy.editor import VideoFileClip, AudioFileClip
 import logging
 
 logging.basicConfig(level=logging.INFO)
+
+_default_clients[ "ANDROID"][ "context"]["client"]["clientVersion"] = "19.08.35"
+_default_clients["IOS"]["context"]["client"]["clientVersion"] = "19.08.35"
+_default_clients[ "ANDROID_EMBED"][ "context"][ "client"]["clientVersion"] = "19.08.35"
+_default_clients[ "IOS_EMBED"][ "context"]["client"]["clientVersion"] = "19.08.35"
+_default_clients["IOS_MUSIC"][ "context"]["client"]["clientVersion"] = "6.41"
+_default_clients[ "ANDROID_MUSIC"] = _default_clients[ "ANDROID_CREATOR" ]
 
 default_headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -21,21 +29,21 @@ default_headers = {
     'dnt': '1',
 }
 
-original_execute_request = _execute_request
+# original_execute_request = _execute_request
 
-def custom_execute_request(
-    url,
-    method=None,
-    headers=None,
-    data=None,
-    timeout=None
-):
-    if headers is None:
-        headers = {}
-    headers.update(default_headers)
-    return original_execute_request(url, method, headers, data, timeout)
+# def custom_execute_request(
+#     url,
+#     method=None,
+#     headers=None,
+#     data=None,
+#     timeout=None
+# ):
+#     if headers is None:
+#         headers = {}
+#     headers.update(default_headers)
+#     return original_execute_request(url, method, headers, data, timeout)
 
-_execute_request = custom_execute_request
+# _execute_request = custom_execute_request
 
 class VideoDownloader:
     def __init__(self, url):
