@@ -27,6 +27,10 @@ A simple and elegant YouTube video downloader built with **Flask**, **jQuery**, 
 ---
 
 ## Installation
+### Prerequisites
+- Python 3.x
+- Internet connection (for downloading videos)
+
 You can run this application locally by following these steps:
 
 1. Install the required packages:
