@@ -26,7 +26,8 @@ class VideoDownloader:
             self.url = url.split("&")[0] if "youtube.com" in url and "&" in url else url
             self.yt = YouTube(
                 self.url,
-                client="WEB"
+                client="WEB",
+                use_po_token=True
             )
             self.yt._vid_info
         except Exception as e:
