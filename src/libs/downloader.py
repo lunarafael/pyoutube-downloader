@@ -1,4 +1,5 @@
 from pytubefix import YouTube
+from pytubefix.request import Request
 import urllib.request
 import os
 import logging
@@ -26,7 +27,7 @@ class VideoDownloader:
             self.yt = YouTube(
                 self.url,
                 client="WEB",
-                use_po_token=True,
+                #use_po_token=True,
                 use_oauth=False, 
                 allow_oauth_cache=False
             )
