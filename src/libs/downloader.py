@@ -23,7 +23,7 @@ def po_token_verifier():
         
         # Verifica se o JSON tem os campos necessários
         visitor_data = token_data.get("visitorData")
-        po_token = token_data.get("po_token")
+        po_token = token_data.get("poToken")
 
         logging.info(f"Visitor Data: {visitor_data}")
         logging.info(f"PO Token: {po_token}")
