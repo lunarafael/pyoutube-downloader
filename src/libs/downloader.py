@@ -21,7 +21,6 @@ def po_token_verifier():
         token_data = json.loads(result.stdout)
         logging.info(f"Token Data: {token_data}")
         
-        # Verifica se o JSON tem os campos necessários
         visitor_data = token_data.get("visitorData")
         po_token = token_data.get("poToken")
 
@@ -29,18 +28,18 @@ def po_token_verifier():
         logging.info(f"PO Token: {po_token}")
         
         if not visitor_data or not po_token:
-            raise ValueError("JSON inválido: visitorData ou po_token ausentes")
+            raise ValueError("Invalid JSON response: Missing visitorData or poToken")
         
         return visitor_data, po_token
     
     except subprocess.CalledProcessError as e:
-        logging.error(f"Erro ao gerar token PO: {e.stderr}")
+        logging.error(f"Error generating JSON: {e.stderr}")
         raise
     except json.JSONDecodeError:
-        logging.error("O comando não retornou um JSON válido")
+        logging.error("Invalid JSON response from the command")
         raise
     except Exception as e:
-        logging.error(f"Erro inesperado: {str(e)}")
+        logging.error(f"Unexpected error: {str(e)}")
         raise
 
 class VideoDownloader:
@@ -48,15 +47,11 @@ class VideoDownloader:
         try:
             self.url = url.split("&")[0] if "youtube.com" in url and "&" in url else url
 
-            self.po_token = po_token_verifier()
-            if not self.po_token:
-                logging.warning("Failed to generate PO token, falling back to default")
-
             self.yt = YouTube(
                 self.url,
                 client="WEB",
                 use_po_token=True,
-                po_token_verifier=self.po_token
+                po_token_verifier=po_token_verifier
             )
             self.yt._vid_info
         except Exception as e:
