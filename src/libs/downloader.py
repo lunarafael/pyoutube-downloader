@@ -1,33 +1,58 @@
 from pytubefix import YouTube
 from pytubefix.request import Request
-import urllib.request
 import os
 import logging
 from io import BytesIO
 from moviepy.editor import VideoFileClip, AudioFileClip
+import subprocess
+import json
 
 logging.basicConfig(level=logging.INFO)
 
-PROXY = os.environ.get("PROXY", None)
-if PROXY:
-    logging.info(f"Using proxy: {PROXY}")
-
-    proxy_handler = urllib.request.ProxyHandler({
-        "http": PROXY,
-        "https": PROXY
-    })
-
-    opener = urllib.request.build_opener(proxy_handler)
-    urllib.request.install_opener(opener)
+def po_token_verifier():
+    try:
+        result = subprocess.run(
+            ['youtube-po-token-generator'],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        token_data = json.loads(result.stdout)
+        
+        # Verifica se o JSON tem os campos necessários
+        visitor_data = token_data.get("visitorData")
+        po_token = token_data.get("po_token")
+        
+        if not visitor_data or not po_token:
+            raise ValueError("JSON inválido: visitorData ou po_token ausentes")
+        
+        return visitor_data, po_token
+    
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Erro ao gerar token PO: {e.stderr}")
+        raise
+    except json.JSONDecodeError:
+        logging.error("O comando não retornou um JSON válido")
+        raise
+    except Exception as e:
+        logging.error(f"Erro inesperado: {str(e)}")
+        raise
 
 class VideoDownloader:
     def __init__(self, url):
         try:
             self.url = url.split("&")[0] if "youtube.com" in url and "&" in url else url
+
+            self.po_token = po_token_verifier()
+            if not self.po_token:
+                logging.warning("Failed to generate PO token, falling back to default")
+
             self.yt = YouTube(
                 self.url,
                 client="WEB",
-                use_po_token=True
+                use_po_token=True,
+                po_token_verifier=self.po_token
             )
             self.yt._vid_info
         except Exception as e:
