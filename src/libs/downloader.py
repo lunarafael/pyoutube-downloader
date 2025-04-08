@@ -19,10 +19,14 @@ def po_token_verifier():
         )
         
         token_data = json.loads(result.stdout)
+        logging.info(f"Token Data: {token_data}")
         
         # Verifica se o JSON tem os campos necessários
         visitor_data = token_data.get("visitorData")
         po_token = token_data.get("po_token")
+
+        logging.info(f"Visitor Data: {visitor_data}")
+        logging.info(f"PO Token: {po_token}")
         
         if not visitor_data or not po_token:
             raise ValueError("JSON inválido: visitorData ou po_token ausentes")
